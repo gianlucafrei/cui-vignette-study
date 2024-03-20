@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A/B Test Application</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Which Answer do you Trust more?</h1>
+        <p>Please click the output that you think is less likely to be wrong.</p>
+
+        <div class="vignettesContainer">
+            <div id="vignetteA" class="vignette chatgpt">
+                <!-- Vignette A content loaded from API -->
+            </div>
+            <div id="vignetteB" class="vignette chatgpt">
+                <!-- Vignette B content loaded from API -->
+            </div>
+        </div>
+
+        <p id="pageIndex">1/25</p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+
+    width: 100%;
+}
+
+h1, h2, p{
+    margin: 5px;
+}
+
+.container {
+    text-align: center;
+    padding: 10%;
+    width: 100%;
+    max-width: 1200px;
+
+}
+
+.vignettesContainer{
+    padding: 0;
+    display: inline-flex;
+    width: 100%;
+    overflow: hidden;
+}
+
+.vignette {
+    border: 2px solid #000;
+    margin: 10px;
+    cursor: pointer;
+    
+    width: 50%;
+    max-width: 700px;
+
+    aspect-ratio: 3 / 2;
+
+
+    display: inline-grid;
+    grid-template-columns: 2.5rem auto;
+    grid-auto-rows: min-content;
+
+    padding: 1rem;
+
+}
+
+.vignette .chatContainer {
+    margin: 0;
+    height: fit-content;
+    margin-bottom: 2rem;
+
+    min-height: 5rem;
+}
+
+.chatgpt {
+    color: rgb(13, 13, 13);
+    font-family: Söhne,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica Neue,Arial,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+}
+
+.vignette div{
+    
+    text-align: left;
+}
+
+.vignette .chatLogo{
+    
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: #7b7b7b;
+    padding: 3px;
+
+    margin-left: 0.25rem;
+    filter: invert(100%) ;
+}
+
+.vignette .chatLogoRobot{
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: #66d90e;
+    padding: 3px;
+
+    margin-left: 0.25rem;
+    filter: invert(100%) ;
+}
+
+.vignette .chatName {
+    font-weight: 600;
+}
+
+.vignette .chatContent {
+    font-weight: 400;
+}
+
+#pageIndex{
+    float: right;
+    margin-right: 1rem;
+    font-style: italic;
+}
+
+/* Responsive design for different desktop and laptop screens */
+@media (max-width: 1024px) {
+    .vignette {
+        width: 45%;
+    }
+}
+
+@media (max-width: 768px) {
+    .vignette {
+        width: 90%;
+    }
+}
+
+
+@keyframes clickAnimation {
+    0% {
+        background-color: rgba(0, 255, 0, 0.3);
+        border-color: green;
+    }
+    100% {
+        background-color: rgba(0, 255, 0, 0);
+        border-color: #000;
+    }
+}
+
+.clicked {
+    animation: clickAnimation 0.5s ease-out forwards;
+}
