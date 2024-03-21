@@ -1,13 +1,16 @@
-var counter = 0;
-const counterTotal = 25;
-
-function resetPair(){
-
-    vignetteA = document.getElementById("vignetteA");
-    vignetteB = document.getElementById("vignetteB");
-
-    vignetteA.innerHTML = '';
-    vignetteB.innerHTML = '';
+const api = "https://trust-cui-study.azurewebsites.net/api"
+const model = {
+    
+    pair: null,
+    experimentName: null,
+    prolific_pid: null,
+    prolific_study_id: null,
+    prolific_session_id: null,
+    counter: 0,
+    startTime: Date.now(),
+    currentPairLoadingTime: null,
+    totalQuestions: null,
+    redirectUrl: null
 }
 
 function create_element_with_text(text, type, clazz){
@@ -15,7 +18,6 @@ function create_element_with_text(text, type, clazz){
     const elem = document.createElement(type);
     elem.textContent = text;
     elem.classList.add(clazz);
-
     return elem;
 }
 
@@ -61,18 +63,28 @@ function renderInstance(question, answer, vignetteContainer){
     vignetteContainer.appendChild(containerAnswer);
 }
 
-function updateCounter(){
+function renderModel(){
 
+     // Render Vignettes
+    const elemVignetteA = document.getElementById("vignetteA");
+    const elemVignetteB = document.getElementById("vignetteB");
+    
+    elemVignetteA.innerHTML = '';
+    elemVignetteB.innerHTML = '';
+
+    renderInstance(model.pair.first.question,  model.pair.first.instance,  elemVignetteA);
+    renderInstance(model.pair.second.question, model.pair.second.instance, elemVignetteB);
+
+    // Render counter
     elem = document.getElementById("pageIndex")
-    elem.innerText = counter + "/" + counterTotal;
+    elem.innerText = model.counter + "/" + model.totalQuestions;
 }
 
-function loadNewPair(){
+function loadNewPair(then){
 
     console.log("Loading new pair")
-    counter += 1
 
-    fetch('https://trust-cui-study.azurewebsites.net/api/get_pair')
+    fetch(api + '/get_pair')
     .then(response => {
         // Check if the response is ok (status in the range 200-299)
         if (!response.ok) {
@@ -83,58 +95,140 @@ function loadNewPair(){
         return response.json();
     })
     .then(data => {
-        // Process the data
-        console.log('Success:', data);
-        resetPair()
 
-        questionA = data.first.question1;
-        answerA = data.first.instance1;
 
-        questionB = data.second.question2;
-        answerB = data.second.instance2;
+        model.pair = data;
+        model.counter += 1;
+        model.currentPairLoadingTime = Date.now();
+        model.totalQuestions = data.totalQuestions;
+        model.redirectUrl = data.redirectUrl;
+        
+        renderModel();
 
-        // Example of accessing parts of the data:
-        console.log('First Instance:', answerA);
-        console.log('First Question:', questionA);
-        console.log('Second Instance:', answerB);
-        console.log('Second Question:', questionB);
-
-        // Add to Dom
-        vignetteA = document.getElementById("vignetteA");
-        renderInstance(questionA, answerA, vignetteA);
-
-        vignetteB = document.getElementById("vignetteB");
-        renderInstance(questionB, answerB, vignetteB);
-
-        // Also update counter
-        updateCounter()
+        if(then){then()}
 
     })
     .catch(error => {
         // Handle any errors that occurred during the fetch
         console.error('There was a problem with your fetch operation:', error);
     });
-
 }
 
-loadNewPair()
+
+function saveResult(selectedVignette) {
+    
+    answerDuration = Date.now() - model.currentPairLoadingTime;
+    totalDuration = Date.now() - model.startTime;
+
+    const params = new URLSearchParams({
+        experiment: model.experimentName,
+        instance1: model.pair.first.s,
+        instance2: model.pair.second.s,
+        vignette1: model.pair.first.v,
+        vignette2: model.pair.second.v,
+        selectedVignette: selectedVignette,
+        answerDuration: answerDuration,
+        totalDuration: totalDuration,
+        prolific_pid: model.prolific_pid,
+        prolific_study_id: model.prolific_study_id,
+        prolific_session_id: model.prolific_session_id,
+    });
+
+    fetch(`https://trust-cui-study.azurewebsites.net/api/save_response?${params}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.text();
+    })
+    .then(data => {
+        console.log('Success:', data);
+        // Handle success, such as indicating to the user that their selection was saved
+    })
+    .catch(error => {
+        console.error('There was a problem with your fetch operation:', error);
+        // Handle error, such as showing an error message to the user
+    });
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
 
     // Attach click event listeners to each vignette
     const vignettes = document.querySelectorAll('.vignette');
     vignettes.forEach(function(vignette) {
+
         vignette.addEventListener('click', function() {
+
             // Retrieve the selected vignette's identifier ('A' or 'B')
             const selectedVignette = this.id.replace('vignette', '');
 
+            // Save result
+            saveResult(selectedVignette)
 
+
+            if(model.counter == model.totalQuestions){
+
+                const callbackLink = model.redirectUrl;
+                openModal("Thank you for participating. Please click on the following link to return to Prolific: <a href="+callbackLink+">"+callbackLink+"</a>");
+            }
+
+
+
+            // Load new pair
+            loadNewPair();
+
+            // click animation
             vignette.classList.add('clicked');
             setTimeout(() => {
                 vignette.classList.remove('clicked');
             }, 500);
 
-            loadNewPair();
         });
     });
 });
+
+function init(then){
+
+    // Init participant id and experiment id from url
+    const urlParams = new URLSearchParams(window.location.search);
+
+    model.experimentName = urlParams.get("experiment");
+    model.prolific_pid = urlParams.get("PROLIFIC_PID");
+    model.prolific_study_id = urlParams.get("STUDY_ID");
+    model.prolific_session_id = urlParams.get("SESSION_ID");
+
+    loadNewPair(then)
+}
+
+
+function openModal(text, onclose){
+
+    var modal = document.getElementById("myModal");
+    var modalTextElem = document.getElementById("modalText");
+    var span = document.getElementsByClassName("close")[0];
+
+    modal.style.display = "block";
+
+    span.onclick = function() {
+        modal.style.display = "none";
+
+        if (onclose){
+            onclose()
+        }
+    }
+
+    modalTextElem.innerHTML = text;
+
+}
+
+init(function(){
+    openModal("Welcome to the Study <b>Trust in Chatbots</b> from the School of Computer Science at the University of St. Gallen.<br>There will be "+model.totalQuestions+" questions.<br><br>Please read the output of both chatbots and select the chatbot answer that you think is less likely to be wrong.")
+});
+
+
