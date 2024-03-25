@@ -10,7 +10,18 @@ const model = {
     startTime: Date.now(),
     currentPairLoadingTime: null,
     totalQuestions: null,
-    redirectUrl: null
+    redirectUrl: null,
+    attentionCheck: false,
+    attentionCheckDone: false,
+    attentionCheckCorrectAnswer: null
+}
+
+function randomAorB(){
+
+    if(Math.random() < 0.5){
+        return "A";
+    }
+    return "B";
 }
 
 function create_element_with_text(text, type, clazz){
@@ -102,6 +113,7 @@ function loadNewPair(then){
         model.currentPairLoadingTime = Date.now();
         model.totalQuestions = data.totalQuestions;
         model.redirectUrl = data.redirectUrl;
+        model.attentionCheck = false;
         
         renderModel();
 
@@ -133,6 +145,15 @@ function saveResult(selectedVignette) {
         prolific_study_id: model.prolific_study_id,
         prolific_session_id: model.prolific_session_id,
     });
+
+    if(model.attentionCheck){
+
+        params.append("attentionCheck", selectedVignette == model.attentionCheckCorrectAnswer);
+        
+    }else{
+
+        params.append("attentionCheck", "");
+    }
 
     fetch(`https://trust-cui-study.azurewebsites.net/api/save_response?${params}`, {
         method: 'POST',
@@ -172,16 +193,30 @@ document.addEventListener('DOMContentLoaded', function() {
             saveResult(selectedVignette)
 
 
-            if(model.counter == model.totalQuestions){
+            if(model.counter >= model.totalQuestions){
 
-                const callbackLink = model.redirectUrl;
-                openModal("Thank you for participating. Please click on the following link to return to Prolific: <a href="+callbackLink+">"+callbackLink+"</a>");
+                if(model.attentionCheckDone){
+
+                    // Finish Survey
+                    const callbackLink = model.redirectUrl;
+                    openModal("Thank you for participating. Please click on the following link to return to Prolific: <a href="+callbackLink+">"+callbackLink+"</a>");
+
+                }
+                else{
+
+                    // Execute Attention Check
+                    model.attentionCheckDone = true;
+                    attentionCheck();
+                }
+                
+            }
+            else{
+
+                // Load new pair
+                loadNewPair();
             }
 
-
-
-            // Load new pair
-            loadNewPair();
+            
 
             // click animation
             vignette.classList.add('clicked');
@@ -204,6 +239,32 @@ function init(then){
     model.prolific_session_id = urlParams.get("SESSION_ID");
 
     loadNewPair(then)
+}
+
+function attentionCheck(){
+
+    model.attentionCheckCorrectAnswer = randomAorB();
+
+
+    model.pair.first.question = "Are blueberries blue?";
+    model.pair.second.question = "Are blueberries red?";
+
+    const correctAnswer = "Blueberries appear blue without a blue pigment. This is an attention check. Please select this answer.";
+    const wrongAnswer = "If you open up a ripe blueberry, the blue skin on its outside does not match the dark, reddish purple color inside of the fruit. However, their skin does not actually contain blue pigments, which would normally be creating this color. This is an attention check. Please select the other answer.";
+
+    if (model.attentionCheckCorrectAnswer == "A"){
+
+        model.pair.first.instance = correctAnswer;
+        model.pair.second.instance = wrongAnswer;
+
+    }else{
+
+        model.pair.first.instance = wrongAnswer;
+        model.pair.second.instance = correctAnswer;
+    }
+    
+    model.attentionCheck = true;
+    renderModel();
 }
 
 
