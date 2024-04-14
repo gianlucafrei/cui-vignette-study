@@ -45,6 +45,7 @@ h1, h2, p{
     grid-auto-rows: min-content;
 
     padding: 1rem;
+    box-sizing: border-box;
 
 }
 
@@ -171,3 +172,94 @@ h1, h2, p{
     text-decoration: none;
     cursor: pointer;
   }
+
+
+
+  .modern {
+    /* Add styles for a modern look */
+    font-family: 'Arial', sans-serif;
+    background: #f5f5f5;
+    padding: 10px;
+  }
+  
+  .outdated {
+    /* Add styles for a simple, outdated look */
+    font-family: 'Times New Roman', serif;
+    background: white;
+    display: block;
+  }
+
+  .outdated svg {
+    display: none;
+  }
+
+  .outdated .chatContainer{
+  }
+
+  .vignetteDescription{
+    font-size: 0.7em;
+    position: absolute;
+    bottom: 5px;
+    color: gray;
+    right: 5px;
+  }
+
+
+  .skeleton {
+    background-color: #eee;
+    border-radius: 4px;
+}
+
+.skeleton-text1 {
+    height: 16px;
+    width: 80%;
+    margin-bottom: 8px;
+}
+.skeleton-text2 {
+    height: 16px;
+    width: 30%;
+    margin-bottom: 8px;
+}
+.skeleton-text3 {
+    height: 16px;
+    width: 70%;
+    margin-bottom: 8px;
+}
+
+/* Animation */
+@keyframes pulse {
+    0% { background-color: #eee; }
+    50% { background-color: #ddd; }
+    100% { background-color: #eee; }
+}
+
+.skeleton {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.highlight {
+    background-color: rgb(253, 198, 156);
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.highlight-description{
+
+    background-color: rgb(253, 198, 156);
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    color: white;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.highlight-description-text{
+    position: absolute;
+    bottom: 1em;
+    color: rgb(255, 134, 41);
+    font-size: 10px;
+}

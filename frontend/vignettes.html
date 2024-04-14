@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Vignettes Variations</title>
+    <style>
+        body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 80%;
+        }
+        .vignette {
+            /*width: 100%;
+            padding-top: 66.66%; */
+            position: relative;
+            width: 100%;
+            margin: 0;
+        }
+        .content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, sans-serif;
+        }
+        /* Unique styles for each div 
+        .div1 { background-color: #3498db; }
+        .div2 { background-color: #e74c3c; }
+        .div3 { background-color: #2ecc71; }
+        .div4 { background-color: #f1c40f; }
+        .div5 { background: linear-gradient(to right, #3498db, #9b59b6); }
+        .div6 { background: linear-gradient(to right, #e74c3c, #f39c12); }
+        .div7 { background: linear-gradient(to right, #2ecc71, #27ae60); }
+        .div8 { background: linear-gradient(to right, #f1c40f, #f39c12); }
+        .div9 { background-color: #9b59b6; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .div10 { background-color: #34495e; border-radius: 10px; }
+        .div11 { background-color: #16a085; border: 2px solid #1abc9c; }
+        .div12 { background-color: #7f8c8d; }
+        .div13 { background-color: #d35400; opacity: 0.8; }
+        .div14 { background-color: #c0392b; transform: rotate(-10deg); }
+        .div15 { background-color: #2980b9; text-decoration: underline; }
+        .div16 { background-color: #8e44ad; text-transform: uppercase; }*/
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Divs with unique styles -->
+        <div class="vignette div2  (0,0,0,1)"><div class="content">Div 2</div></div>
+        <div class="vignette div3  (0,0,1,0)"><div class="content">Div 3</div></div>
+        <div class="vignette div5  (0,1,0,0)"><div class="content">Div 5</div></div>
+        <div class="vignette div9  (1,0,0,0)"><div class="content">Div 9</div></div>
+        
+        <div class="vignette div1  (0,0,0,0)"><div class="content">Div 1</div></div>
+        <div class="vignette div4  (0,0,1,1)"><div class="content">Div 4</div></div>
+        <div class="vignette div6  (0,1,0,1)"><div class="content">Div 6</div></div>
+        <div class="vignette div7  (0,1,1,0)"><div class="content">Div 7</div></div>
+        <div class="vignette div8  (0,1,1,1)"><div class="content">Div 8</div></div>
+        <div class="vignette div10 (1,0,0,1)"><div class="content">Div 10</div></div>
+        <div class="vignette div11 (1,0,1,0)"><div class="content">Div 11</div></div>
+        <div class="vignette div12 (1,0,1,1)"><div class="content">Div 12</div></div>
+        <div class="vignette div13 (1,1,0,0)"><div class="content">Div 13</div></div>
+        <div class="vignette div14 (1,1,0,1)"><div class="content">Div 14</div></div>
+        <div class="vignette div15 (1,1,1,0)"><div class="content">Div 15</div></div>
+        <div class="vignette div16 (1,1,1,1)"><div class="content">Div 16</div></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>

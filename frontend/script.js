@@ -55,23 +55,133 @@ function createSvgWithUrl(url, width, height, clazz) {
     return svg;
   }
 
+function createTypewriterEffect(element, baseSpeed, speedVariation, then) {
+
+const text = element.innerText;
+element.innerText = "";
+
+var i = 0;
+var isBeginningOfWord = true; // Flag to check if we're at the beginning of a new word
+var randomSpeed = baseSpeed; // Start with the base speed
+
+function typeWriter() {
+    if (i < text.length) {
+    // Check if the current character is a space or if we're at the start
+    if (isBeginningOfWord) {
+        // Adjust the random speed for the next word
+        randomSpeed = speedVariation + Math.random() * 100;
+        isBeginningOfWord = false; // Reset the flag
+    }
+    
+    // Add the current character to the HTML
+    element.innerHTML += text.charAt(i);
+    
+    // Check if the next character is a space or if we're at the end
+    if (text.charAt(i + 1) === ' ' || i === text.length - 1) {
+        isBeginningOfWord = true; // The next character will be the start of a new word
+    }
+    
+    i++; // Move to the next character
+    setTimeout(typeWriter, randomSpeed);
+    }else{
+
+        if(then){then();}
+    }
+}
+
+typeWriter(); // Start the typewriter effect
+}
+
+function createSkelletonEffect(element){
+
+    const randomSpeed = 5000 * Math.random();
+
+    const innerHtml = element.innerHTML;
+    element.innerHTML = '<div class="skeleton skeleton-text1"></div><div class="skeleton skeleton-text2"></div><div class="skeleton skeleton-text3"></div>';
+
+
+    setTimeout(function(){
+        
+        element.innerHtml = innerHtml;
+
+    }, randomSpeed)
+}
+
+function highlightUncertainText(div) {
+    const text = div.innerText;
+    const words = text.split(/\s+/);
+
+    // Calculate start point and check if total words are less than 10
+    let start = 0;
+    let end = words.length;
+
+    if (words.length >= 10) {
+        // Random starting point from 0 to length - 10 so that at least 10 words are included
+        start = Math.floor(Math.random() * (words.length - 10));
+        end = start + 10;
+    }
+
+    // Join the words to form the highlighted and non-highlighted parts
+    const beforeHighlight = words.slice(0, start).join(' ');
+    const highlightText = words.slice(start, end).join(' ');
+    const afterHighlight = words.slice(end).join(' ');
+
+    // Rebuild the content with highlight
+    div.innerHTML = `
+    ${beforeHighlight}
+    <span title="Uncertain Answer" class="highlight">${highlightText}</span>
+    <span title="Uncertain Answer" class="highlight-description">!</span>
+    ${afterHighlight}
+    <br><span title="" class="highlight-description-text">This answer contain uncertain parts.</span>`;
+}
+
 function renderInstance(question, answer, vignetteContainer){
 
     vignetteContainer.innerHTML = '';
     //vignetteContainer.appendChild(create_element_with_text(null, "div", "chatLogo"));
 
-    vignetteContainer.appendChild(createSvgWithUrl("images/person-svgrepo-com.svg", 25, 25, "chatLogo"));
+    const userLogoElem = vignetteContainer.appendChild(createSvgWithUrl("images/person-svgrepo-com.svg", 25, 25, "chatLogo"));
     containerQuestion = create_element_with_text(null, "div", "chatContainer")
     containerQuestion.appendChild(create_element_with_text("You", "div", "chatName"));
     containerQuestion.appendChild(create_element_with_text(question, "div", "chatContent"));
     vignetteContainer.appendChild(containerQuestion);
 
+    if(vignetteContainer.classList.contains('humanLike')){
 
-    vignetteContainer.appendChild(createSvgWithUrl("images/machine-learning-solid-svgrepo-com.svg", 25, 25, "chatLogoRobot"));
+        aiAvatarUrl = "images/person-svgrepo-com.svg";
+        aiAvatarName = "Laura";
+    }else{
+
+        aiAvatarUrl = "images/machine-learning-solid-svgrepo-com.svg";
+        aiAvatarName = "Chatbot";
+    }
+
+    const aiLogoElem = vignetteContainer.appendChild(createSvgWithUrl(aiAvatarUrl, 25, 25, "chatLogoRobot"));
     containerAnswer = create_element_with_text(null, "div", "chatContainer")
-    containerAnswer.appendChild(create_element_with_text("Chatbot", "div", "chatName"));
-    containerAnswer.appendChild(create_element_with_text(answer, "div", "chatContent"));
+    containerAnswer.appendChild(create_element_with_text(aiAvatarName, "div", "chatName"));
+
+    chatContentElem = create_element_with_text(answer, "div", "chatContent");
+    containerAnswer.appendChild(chatContentElem);
     vignetteContainer.appendChild(containerAnswer);
+
+
+    createHighlight = function(){
+        
+        if(vignetteContainer.classList.contains('indicationOfUncertainty')){
+
+            highlightUncertainText(chatContentElem);
+        }
+    }
+
+    if(vignetteContainer.classList.contains('fastOutputSpeed')){
+
+        createTypewriterEffect(chatContentElem, 0, 0, createHighlight);
+
+    }else{
+
+        //createSkelletonEffect(chatContentElem);
+        createHighlight();
+    }
 }
 
 function renderModel(){
@@ -144,6 +254,7 @@ function saveResult(selectedVignette) {
         prolific_pid: model.prolific_pid,
         prolific_study_id: model.prolific_study_id,
         prolific_session_id: model.prolific_session_id,
+        counter: model.counter
     });
 
     if(model.attentionCheck){
@@ -176,57 +287,6 @@ function saveResult(selectedVignette) {
         // Handle error, such as showing an error message to the user
     });
 }
-
-
-document.addEventListener('DOMContentLoaded', function() {
-
-    // Attach click event listeners to each vignette
-    const vignettes = document.querySelectorAll('.vignette');
-    vignettes.forEach(function(vignette) {
-
-        vignette.addEventListener('click', function() {
-
-            // Retrieve the selected vignette's identifier ('A' or 'B')
-            const selectedVignette = this.id.replace('vignette', '');
-
-            // Save result
-            saveResult(selectedVignette)
-
-
-            if(model.counter >= model.totalQuestions){
-
-                if(model.attentionCheckDone){
-
-                    // Finish Survey
-                    const callbackLink = model.redirectUrl;
-                    openModal("Thank you for participating. Please click on the following link to return to Prolific: <a href="+callbackLink+">"+callbackLink+"</a>");
-
-                }
-                else{
-
-                    // Execute Attention Check
-                    model.attentionCheckDone = true;
-                    attentionCheck();
-                }
-                
-            }
-            else{
-
-                // Load new pair
-                loadNewPair();
-            }
-
-            
-
-            // click animation
-            vignette.classList.add('clicked');
-            setTimeout(() => {
-                vignette.classList.remove('clicked');
-            }, 500);
-
-        });
-    });
-});
 
 function init(then){
 
@@ -288,8 +348,116 @@ function openModal(text, onclose){
 
 }
 
-init(function(){
-    openModal("Welcome to the Study <b>Trust in Chatbots</b> from the School of Computer Science at the University of St. Gallen.<br>There will be "+model.totalQuestions+" questions.<br><br>Please read the output of both chatbots and select the chatbot answer that you think is less likely to be wrong.")
+function main(){
+
+    init(function(){
+        openModal("Welcome to the Study <b>Trust in Chatbots</b> from the School of Computer Science at the University of St. Gallen.<br>There will be "+model.totalQuestions+" questions.<br><br>Please read the output of both chatbots and select the chatbot answer that you think is less likely to be wrong.")
+    });
+
+    // Attach click event listeners to each vignette
+    const vignettes = document.querySelectorAll('.vignette');
+    vignettes.forEach(function(vignette) {
+
+        vignette.addEventListener('click', function() {
+
+            // Retrieve the selected vignette's identifier ('A' or 'B')
+            const selectedVignette = this.id.replace('vignette', '');
+
+            // Save result
+            saveResult(selectedVignette)
+
+
+            if(model.counter >= model.totalQuestions){
+
+                if(model.attentionCheckDone){
+
+                    // Finish Survey
+                    const callbackLink = model.redirectUrl;
+                    openModal("Thank you for participating. Please click on the following link to return to Prolific: <a href="+callbackLink+">"+callbackLink+"</a>");
+
+                }
+                else{
+
+                    // Execute Attention Check
+                    model.attentionCheckDone = true;
+                    attentionCheck();
+                }
+                
+            }
+            else{
+
+                // Load new pair
+                loadNewPair();
+            }
+
+            
+
+            // click animation
+            vignette.classList.add('clicked');
+            setTimeout(() => {
+                vignette.classList.remove('clicked');
+            }, 500);
+
+        });
+    });
+}
+
+function showVignettes(){
+
+    var vignettes = document.getElementsByClassName("vignette");
+
+    factors = [
+        ["normalOutputSpeed", "fastOutputSpeed"],
+        ["modern", "outdated"],
+        ["machineLike", "humanLike"],
+        ["noIndicationOfUncertainty", "indicationOfUncertainty"],
+    ] 
+
+    const question = "Are blueberries red?";
+    const answer = "If you open up a ripe blueberry, the blue skin on its outside does not match the dark, reddish purple color inside of the fruit. However, their skin does not actually contain blue pigments, which would normally be creating this color.";
+
+    for (var i = 0; i < vignettes.length; i++) {
+
+        const vignetteElem = vignettes[i];
+        const indices = vignetteElem.className.match(/\((.*?)\)/)[1].split(',').map(Number);
+        console.log(indices)
+
+        const factorClasses = indices.map((index, factorIndex) => factors[factorIndex][index]);
+        vignetteElem.classList.add(...factorClasses);
+
+        const paint = function(){
+
+            renderInstance(question, answer, vignetteElem);
+            const descriptionElem = create_element_with_text(factorClasses, "div", "vignetteDescription")
+            vignetteElem.appendChild(descriptionElem);
+        }
+
+        paint();
+
+        // Adding a click event listener to re-render on click
+        vignetteElem.addEventListener('click', () => {
+            
+            paint();
+            
+            // click animation
+            vignetteElem.classList.add('clicked');
+            setTimeout(() => {
+                vignetteElem.classList.remove('clicked');
+            }, 500);
+            });
+
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    if(window.location.pathname.endsWith("vignettes.html")){
+        showVignettes();
+    }
+    else{
+        main();
+    }
 });
 
 
