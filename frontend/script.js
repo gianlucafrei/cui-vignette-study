@@ -28,7 +28,9 @@ function create_element_with_text(text, type, clazz){
 
     const elem = document.createElement(type);
     elem.textContent = text;
-    elem.classList.add(clazz);
+
+    clazz.split(" ").forEach(c => elem.classList.add(c));
+    
     return elem;
 }
 
@@ -143,7 +145,7 @@ function renderInstance(question, answer, vignetteContainer){
     const userLogoElem = vignetteContainer.appendChild(createSvgWithUrl("images/person-svgrepo-com.svg", 25, 25, "chatLogo"));
     containerQuestion = create_element_with_text(null, "div", "chatContainer")
     containerQuestion.appendChild(create_element_with_text("You", "div", "chatName"));
-    containerQuestion.appendChild(create_element_with_text(question, "div", "chatContent"));
+    containerQuestion.appendChild(create_element_with_text(question, "div", "chatContent question"));
     vignetteContainer.appendChild(containerQuestion);
 
     if(vignetteContainer.classList.contains('humanLike')){
@@ -160,7 +162,7 @@ function renderInstance(question, answer, vignetteContainer){
     containerAnswer = create_element_with_text(null, "div", "chatContainer")
     containerAnswer.appendChild(create_element_with_text(aiAvatarName, "div", "chatName"));
 
-    chatContentElem = create_element_with_text(answer, "div", "chatContent");
+    chatContentElem = create_element_with_text(answer, "div", "chatContent answer");
     containerAnswer.appendChild(chatContentElem);
     vignetteContainer.appendChild(containerAnswer);
 
@@ -407,7 +409,7 @@ function showVignettes(){
     var vignettes = document.getElementsByClassName("vignette");
 
     factors = [
-        ["normalOutputSpeed", "fastOutputSpeed"],
+        ["instantOutputSpeed", "fastOutputSpeed"],
         ["modern", "outdated"],
         ["machineLike", "humanLike"],
         ["noIndicationOfUncertainty", "indicationOfUncertainty"],
