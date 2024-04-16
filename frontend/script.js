@@ -9,12 +9,21 @@ const model = {
     counter: 0,
     startTime: Date.now(),
     currentPairLoadingTime: null,
-    totalQuestions: null,
+    totalQuestions: 15,
     redirectUrl: null,
     attentionCheck: false,
     attentionCheckDone: false,
-    attentionCheckCorrectAnswer: null
+    attentionCheckCorrectAnswer: null,
+    vv1: null, // visual vignette 1
+    vv2: null, // visual vignette 2
 }
+
+const factors = [
+    ["instantOutputSpeed", "fastOutputSpeed"],
+    ["modern", "outdated"],
+    ["machineLike", "humanLike"],
+    ["noIndicationOfUncertainty", "indicationOfUncertainty"],
+] 
 
 function randomAorB(){
 
@@ -137,10 +146,15 @@ function highlightUncertainText(div) {
     <br><span title="" class="highlight-description-text">This answer contain uncertain parts.</span>`;
 }
 
-function renderInstance(question, answer, vignetteContainer){
+function renderInstance(question, answer, vignetteContainer, visualVignette){
 
+    // Reset container
     vignetteContainer.innerHTML = '';
-    //vignetteContainer.appendChild(create_element_with_text(null, "div", "chatLogo"));
+
+    // reset and add vignette classes
+    const factorClasses = visualVignette.map((index, factorIndex) => factors[factorIndex][index]);
+    vignetteContainer.className = 'vignette';
+    vignetteContainer.classList.add(...factorClasses);
 
     const userLogoElem = vignetteContainer.appendChild(createSvgWithUrl("images/person-svgrepo-com.svg", 25, 25, "chatLogo"));
     containerQuestion = create_element_with_text(null, "div", "chatContainer")
@@ -195,12 +209,14 @@ function renderModel(){
     elemVignetteA.innerHTML = '';
     elemVignetteB.innerHTML = '';
 
-    renderInstance(model.pair.first.question,  model.pair.first.instance,  elemVignetteA);
-    renderInstance(model.pair.second.question, model.pair.second.instance, elemVignetteB);
+    renderInstance(model.pair.first.question,  model.pair.first.instance,  elemVignetteA, model.vv1);
+    renderInstance(model.pair.second.question, model.pair.second.instance, elemVignetteB, model.vv2);
+
+    var debugText = model.pair.first.v + "[" + model.vv1 + "] / " + model.pair.second.v + "[" + model.vv2 + "]";
 
     // Render counter
     elem = document.getElementById("pageIndex")
-    elem.innerText = model.counter + "/" + model.totalQuestions;
+    elem.innerText = debugText + "  " + model.counter + "/" + model.totalQuestions;
 }
 
 function loadNewPair(then){
@@ -223,9 +239,12 @@ function loadNewPair(then){
         model.pair = data;
         model.counter += 1;
         model.currentPairLoadingTime = Date.now();
-        model.totalQuestions = data.totalQuestions;
-        model.redirectUrl = data.redirectUrl;
+        //model.totalQuestions = data.totalQuestions;
+        //model.redirectUrl = data.redirectUrl;
         model.attentionCheck = false;
+
+        model.vv1 = randomVisualVignette();
+        model.vv2 = randomVisualVignette();
         
         renderModel();
 
@@ -250,13 +269,15 @@ function saveResult(selectedVignette) {
         instance2: model.pair.second.s,
         vignette1: model.pair.first.v,
         vignette2: model.pair.second.v,
+        visualVignette1: model.vv1,
+        visualVignette2: model.vv2,
         selectedVignette: selectedVignette,
         answerDuration: answerDuration,
         totalDuration: totalDuration,
         prolific_pid: model.prolific_pid,
         prolific_study_id: model.prolific_study_id,
         prolific_session_id: model.prolific_session_id,
-        counter: model.counter
+        counter: model.counter,
     });
 
     if(model.attentionCheck){
@@ -404,16 +425,18 @@ function main(){
     });
 }
 
+function randomVisualVignette(){
+    
+    let visualVignette = [];
+    for (let i = 0; i < 4; i++) {
+        visualVignette.push(Math.round(Math.random()));
+    }
+    return visualVignette;
+}
+
 function showVignettes(){
 
     var vignettes = document.getElementsByClassName("vignette");
-
-    factors = [
-        ["instantOutputSpeed", "fastOutputSpeed"],
-        ["modern", "outdated"],
-        ["machineLike", "humanLike"],
-        ["noIndicationOfUncertainty", "indicationOfUncertainty"],
-    ] 
 
     const question = "Are blueberries red?";
     const answer = "If you open up a ripe blueberry, the blue skin on its outside does not match the dark, reddish purple color inside of the fruit. However, their skin does not actually contain blue pigments, which would normally be creating this color.";
@@ -421,16 +444,13 @@ function showVignettes(){
     for (var i = 0; i < vignettes.length; i++) {
 
         const vignetteElem = vignettes[i];
-        const indices = vignetteElem.className.match(/\((.*?)\)/)[1].split(',').map(Number);
-        console.log(indices)
-
-        const factorClasses = indices.map((index, factorIndex) => factors[factorIndex][index]);
-        vignetteElem.classList.add(...factorClasses);
+        const visualVignette = vignetteElem.className.match(/\((.*?)\)/)[1].split(',').map(Number);
+        console.log(visualVignette)
 
         const paint = function(){
 
-            renderInstance(question, answer, vignetteElem);
-            const descriptionElem = create_element_with_text(factorClasses, "div", "vignetteDescription")
+            renderInstance(question, answer, vignetteElem, visualVignette);
+            const descriptionElem = create_element_with_text("[" + visualVignette + "]", "div", "vignetteDescription")
             vignetteElem.appendChild(descriptionElem);
         }
 

@@ -7,7 +7,12 @@ body, html {
     height: 100vh;
     font-family: Arial, sans-serif;
 
-    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
 }
 
 h1, h2, p{
@@ -21,32 +26,23 @@ h1, h2, p{
     max-width: 1200px;
 
 }
-
 .vignettesContainer{
-    padding: 0;
-    display: inline-flex;
-    width: 100%;
-    overflow: hidden;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
 }
 
 .vignette {
     border: 2px solid #000;
-    margin: 10px;
+
     cursor: pointer;
     
-    width: 50%;
-    max-width: 700px;
-
-    aspect-ratio: 3 / 2;
-
-
-    display: inline-grid;
-    grid-template-columns: 2.5rem auto;
-    grid-auto-rows: min-content;
-
-    padding: 1rem;
+    position: relative;
+    width: 100%;
+    margin: 0;
     box-sizing: border-box;
-
+    padding: 10px;
+    text-align: left;
 }
 
 .vignette .chatContainer {
@@ -268,7 +264,7 @@ h1, h2, p{
     --r: 25px; /* the radius */
     --t: 10px; /* the size of the tail */
     
-    max-width: 300px;
+    max-width: 400px;
     padding: calc(2*var(--r)/3);
     -webkit-mask: 
       radial-gradient(var(--t) at var(--_d) 0,#0000 98%,#000 102%) 
@@ -302,6 +298,6 @@ h1, h2, p{
     padding: 5px;
   }
 
-.outdated.indicationOfUncertainty .answer{
-    padding-bottom: 20px;
+.indicationOfUncertainty .answer{
+    padding-bottom: 20px !important;
 }
