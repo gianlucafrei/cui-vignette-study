@@ -221,7 +221,7 @@ function renderModel(){
     renderInstance(model.pair.first.question,  model.pair.first.instance,  elemVignetteA, model.vv1);
     renderInstance(model.pair.second.question, model.pair.second.instance, elemVignetteB, model.vv2);
 
-    var debugText = model.pair.first.v + "[" + model.vv1 + "] / " + model.pair.second.v + "[" + model.vv2 + "]";
+    var debugText = "";//model.pair.first.v + "[" + model.vv1 + "] / " + model.pair.second.v + "[" + model.vv2 + "]";
 
     // Render counter
     elem = document.getElementById("pageIndex")
@@ -329,19 +329,6 @@ function saveResult(selectedVignette) {
     });
 }
 
-function init(then){
-
-    // Init participant id and experiment id from url
-    const urlParams = new URLSearchParams(window.location.search);
-
-    model.experimentName = urlParams.get("experiment");
-    model.prolific_pid = urlParams.get("PROLIFIC_PID");
-    model.prolific_study_id = urlParams.get("STUDY_ID");
-    model.prolific_session_id = urlParams.get("SESSION_ID");
-
-    loadNewPair(then)
-}
-
 function attentionCheck(){
 
     model.attentionCheckCorrectAnswer = randomAorB();
@@ -387,6 +374,13 @@ function openModal(text, onclose){
 }
 
 function init(){
+
+    // Init participant id and experiment id from url
+    const urlParams = new URLSearchParams(window.location.search);
+    model.experimentName = Math.round(Math.random() * 1000000000000);
+    model.prolific_pid = urlParams.get("PROLIFIC_PID");
+    model.prolific_study_id = urlParams.get("STUDY_ID");
+    model.prolific_session_id = urlParams.get("SESSION_ID");
 
     loadNewPair();
 
