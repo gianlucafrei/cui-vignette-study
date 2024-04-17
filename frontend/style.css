@@ -34,11 +34,14 @@ h1, h2, p{
 
 .vignette {
     border: 2px solid #000;
-
     cursor: pointer;
-    
     position: relative;
-    width: 100%;
+
+    width: 600px;
+    height: 100%;
+    min-height: 500px;
+    min-width: 600px;
+
     margin: 0;
     box-sizing: border-box;
     padding: 10px;

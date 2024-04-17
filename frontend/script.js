@@ -14,9 +14,13 @@ const model = {
     attentionCheck: false,
     attentionCheckDone: false,
     attentionCheckCorrectAnswer: null,
+    attentionCheckResult: null,
     vv1: null, // visual vignette 1
     vv2: null, // visual vignette 2
 }
+
+const redirectPositive = "https://app.prolific.com/submissions/complete?cc=CN46KEYE";
+const redirectAttentionCheckFailed = "https://app.prolific.com/submissions/complete?cc=C1CMRBLB";
 
 const factors = [
     ["instantOutputSpeed", "fastOutputSpeed"],
@@ -66,59 +70,71 @@ function createSvgWithUrl(url, width, height, clazz) {
     return svg;
   }
 
-function createTypewriterEffect(element, baseSpeed, speedVariation, then) {
+  function createTypewriterEffect(element, baseSpeed, speedVariation, then) {
+    const htmlContent = element.innerHTML; // Use innerHTML to keep the HTML structure
+    element.innerHTML = "";
 
-const text = element.innerText;
-element.innerText = "";
+    var i = 0;
+    var isBeginningOfWord = true; // Flag to check if we're at the beginning of a new word
+    var randomSpeed = baseSpeed; // Start with the base speed
 
-var i = 0;
-var isBeginningOfWord = true; // Flag to check if we're at the beginning of a new word
-var randomSpeed = baseSpeed; // Start with the base speed
+    var wroteText = "";
+    function write(text){
 
-function typeWriter() {
-    if (i < text.length) {
-    // Check if the current character is a space or if we're at the start
-    if (isBeginningOfWord) {
-        // Adjust the random speed for the next word
-        randomSpeed = speedVariation + Math.random() * 100;
-        isBeginningOfWord = false; // Reset the flag
+        // Makes sure browser mutations don't change html output
+        wroteText += text;
+        element.innerHTML = wroteText;
+
+        console.debug("Wrote: " + wroteText);
     }
-    
-    // Add the current character to the HTML
-    element.innerHTML += text.charAt(i);
-    
-    // Check if the next character is a space or if we're at the end
-    if (text.charAt(i + 1) === ' ' || i === text.length - 1) {
-        isBeginningOfWord = true; // The next character will be the start of a new word
-    }
-    
-    i++; // Move to the next character
-    setTimeout(typeWriter, randomSpeed);
-    }else{
 
-        if(then){then();}
+    function typeWriter() {
+
+        if (i < htmlContent.length) {
+            // Check if the current character is a space or if we're at the start
+            if (isBeginningOfWord) {
+                // Adjust the random speed for the next word
+                randomSpeed = speedVariation + Math.random() * 50;
+                isBeginningOfWord = false; // Reset the flag
+            }
+
+            // Handle HTML tags
+            if (htmlContent[i] === '<') {
+                // Find the end of the current tag
+                const endOfTag = htmlContent.indexOf('>', i);
+                if (endOfTag !== -1) {
+                    // Append the whole tag at once without delay
+                    write(htmlContent.slice(i, endOfTag + 1))
+                    i = endOfTag; // Move index to the end of the tag
+                }
+            } else {
+                // Add the current character to the HTML
+                write(htmlContent[i]);
+            }
+            
+            // Check if the next character is a space or if we're at the end
+            if (htmlContent.charAt(i + 1) === ' ' || i === htmlContent.length - 1) {
+                isBeginningOfWord = true; // The next character will be the start of a new word
+            }
+            
+            i++; // Move to the next character
+            setTimeout(typeWriter, randomSpeed);
+        } else {
+            
+        }
     }
+
+    typeWriter(); // Start the typewriter effect
 }
 
-typeWriter(); // Start the typewriter effect
-}
+function createSkelletonEffectWhileLoading(){
 
-function createSkelletonEffect(element){
-
-    const randomSpeed = 5000 * Math.random();
-
-    const innerHtml = element.innerHTML;
-    element.innerHTML = '<div class="skeleton skeleton-text1"></div><div class="skeleton skeleton-text2"></div><div class="skeleton skeleton-text3"></div>';
-
-
-    setTimeout(function(){
-        
-        element.innerHtml = innerHtml;
-
-    }, randomSpeed)
+    document.getElementById("vignetteA").innerHTML = '<div class="skeleton skeleton-text1"></div><div class="skeleton skeleton-text2"></div><div class="skeleton skeleton-text3"></div>';
+    document.getElementById("vignetteB").innerHTML = '<div class="skeleton skeleton-text1"></div><div class="skeleton skeleton-text2"></div><div class="skeleton skeleton-text3"></div>';
 }
 
 function highlightUncertainText(div) {
+    
     const text = div.innerText;
     const words = text.split(/\s+/);
 
@@ -181,22 +197,15 @@ function renderInstance(question, answer, vignetteContainer, visualVignette){
     vignetteContainer.appendChild(containerAnswer);
 
 
-    createHighlight = function(){
-        
-        if(vignetteContainer.classList.contains('indicationOfUncertainty')){
+    if(vignetteContainer.classList.contains('indicationOfUncertainty')){
 
-            highlightUncertainText(chatContentElem);
-        }
+        highlightUncertainText(chatContentElem);
     }
 
     if(vignetteContainer.classList.contains('fastOutputSpeed')){
 
-        createTypewriterEffect(chatContentElem, 0, 0, createHighlight);
+        createTypewriterEffect(chatContentElem, 0, 0);
 
-    }else{
-
-        //createSkelletonEffect(chatContentElem);
-        createHighlight();
     }
 }
 
@@ -221,6 +230,7 @@ function renderModel(){
 
 function loadNewPair(then){
 
+    createSkelletonEffectWhileLoading();
     console.log("Loading new pair")
 
     fetch(api + '/get_pair')
@@ -282,7 +292,15 @@ function saveResult(selectedVignette) {
 
     if(model.attentionCheck){
 
-        params.append("attentionCheck", selectedVignette == model.attentionCheckCorrectAnswer);
+        model.attentionCheckResult = (selectedVignette == model.attentionCheckCorrectAnswer);
+
+        params.append("attentionCheck", model.attentionCheckResult);
+        params.delete("instance1");
+        params.delete("instance2");
+        params.delete("vignette1");
+        params.delete("vignette2");
+        params.delete("visualVignette1");
+        params.delete("visualVignette2");
         
     }else{
 
@@ -361,21 +379,16 @@ function openModal(text, onclose){
 
     span.onclick = function() {
         modal.style.display = "none";
-
-        if (onclose){
-            onclose()
-        }
+        onclose();
     }
 
     modalTextElem.innerHTML = text;
 
 }
 
-function main(){
+function init(){
 
-    init(function(){
-        openModal("Welcome to the Study <b>Trust in Chatbots</b> from the School of Computer Science at the University of St. Gallen.<br>There will be "+model.totalQuestions+" questions.<br><br>Please read the output of both chatbots and select the chatbot answer that you think is less likely to be wrong.")
-    });
+    loadNewPair();
 
     // Attach click event listeners to each vignette
     const vignettes = document.querySelectorAll('.vignette');
@@ -395,9 +408,15 @@ function main(){
                 if(model.attentionCheckDone){
 
                     // Finish Survey
-                    const callbackLink = model.redirectUrl;
-                    openModal("Thank you for participating. Please click on the following link to return to Prolific: <a href="+callbackLink+">"+callbackLink+"</a>");
+                    if (model.attentionCheckResult){
 
+                        const callbackLink = redirectPositive;
+                        openModal("Thank you for participating. Please click on the following link to return to Prolific: <a href="+callbackLink+">"+callbackLink+"</a>");
+                    }else{
+
+                        const callbackLink = redirectAttentionCheckFailed;
+                        openModal("Unfortunately you clicked the wrong answer during the attention check. Please click on the following link to return to Prolific: <a href="+callbackLink+">"+callbackLink+"</a>");
+                    }
                 }
                 else{
 
@@ -423,6 +442,14 @@ function main(){
 
         });
     });
+}
+
+function main(){
+
+    createSkelletonEffectWhileLoading();
+    
+    openModal("Welcome to the Study <b>Trust in Chatbots</b> from the School of Computer Science at the University of St. Gallen.<br>There will be "+model.totalQuestions+" questions.<br><br>Please read the output of both chatbots and select the chatbot answer that you think is less likely to be wrong.",
+        init);
 }
 
 function randomVisualVignette(){
@@ -474,11 +501,11 @@ function showVignettes(){
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    if(window.location.pathname.endsWith("vignettes.html")){
-        showVignettes();
+    if(window.location.pathname.endsWith("index.html")){
+        main();
     }
     else{
-        main();
+        showVignettes();
     }
 });
 
